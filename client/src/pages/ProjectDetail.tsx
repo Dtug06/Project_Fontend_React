@@ -1,6 +1,7 @@
 import { useState } from "react";
 import TaskModal from "../components/TaskModal";
-import { EllipsisOutlined } from '@ant-design/icons';
+import { EllipsisOutlined } from "@ant-design/icons";
+import ConfirmDeleteTask from "../components/ConfirmDeleteTask";
 interface Task {
   id: number;
   name: string;
@@ -58,7 +59,8 @@ const ProjectDetail = () => {
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const handleAddTask = () => {
     setSelectedTask(null);
     setIsTaskModalOpen(true);
@@ -80,15 +82,13 @@ const ProjectDetail = () => {
                 name: newTask.name,
                 assignee: newTask.assignee,
                 section: newTask.status === "Done" ? "Done" : t.section,
-                priority:
-                  newTask.priority as "Thấp" | "Trung bình" | "Cao",
+                priority: newTask.priority as "Thấp" | "Trung bình" | "Cao",
                 startDate: newTask.startDate,
                 deadline: newTask.dueDate,
-                status:
-                  newTask.progress as
-                    | "Đúng tiến độ"
-                    | "Có rủi ro"
-                    | "Trễ hạn",
+                status: newTask.progress as
+                  | "Đúng tiến độ"
+                  | "Có rủi ro"
+                  | "Trễ hạn",
               }
             : t
         )
@@ -102,15 +102,10 @@ const ProjectDetail = () => {
           id: newId,
           name: newTask.name,
           assignee: newTask.assignee,
-          priority:
-            newTask.priority as "Thấp" | "Trung bình" | "Cao",
+          priority: newTask.priority as "Thấp" | "Trung bình" | "Cao",
           startDate: newTask.startDate,
           deadline: newTask.dueDate,
-          status:
-            newTask.progress as
-              | "Đúng tiến độ"
-              | "Có rủi ro"
-              | "Trễ hạn",
+          status: newTask.progress as "Đúng tiến độ" | "Có rủi ro" | "Trễ hạn",
           section: newTask.status as
             | "To do"
             | "In Progress"
@@ -126,7 +121,18 @@ const ProjectDetail = () => {
       setTasks((prev) => prev.filter((t) => t.id !== id));
     }
   };
+  const handleDeleteClick = (task: Task) => {
+    setTaskToDelete(task);
+    setIsConfirmOpen(true);
+  };
 
+  const handleConfirmDelete = () => {
+    if (taskToDelete) {
+      setTasks((prev) => prev.filter((t) => t.id !== taskToDelete.id));
+      setTaskToDelete(null);
+      setIsConfirmOpen(false);
+    }
+  };
   const renderPriority = (priority: Task["priority"]) => {
     switch (priority) {
       case "Thấp":
@@ -210,9 +216,8 @@ const ProjectDetail = () => {
             />
             <div className="w-[350px] pl-2">
               <p className="text-gray-600 ml-[25px]">
-                Dự án nhằm phát triển nền tảng thương mại điện tử với
-                các tính năng như giỏ hàng, thanh toán và quản lý sản
-                phẩm.
+                Dự án nhằm phát triển nền tảng thương mại điện tử với các tính
+                năng như giỏ hàng, thanh toán và quản lý sản phẩm.
               </p>
             </div>
           </div>
@@ -240,9 +245,7 @@ const ProjectDetail = () => {
                 </div>
                 <div>
                   <p className="font-medium">An Nguyễn</p>
-                  <p className="text-xs text-gray-500">
-                    Project Owner
-                  </p>
+                  <p className="text-xs text-gray-500">Project Owner</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -251,11 +254,11 @@ const ProjectDetail = () => {
                 </div>
                 <div>
                   <p className="font-medium">Bách Nguyễn</p>
-                  <p className="text-xs text-gray-500">
-                    Frontend Developer
-                  </p>
+                  <p className="text-xs text-gray-500">Frontend Developer</p>
                 </div>
-                <button className="bg-gray-300 py-1 px-3 hover:bg-gray-500 rounded-3xl "><EllipsisOutlined></EllipsisOutlined></button>
+                <button className="bg-gray-300 py-1 px-3 hover:bg-gray-500 rounded-3xl ">
+                  <EllipsisOutlined></EllipsisOutlined>
+                </button>
               </div>
             </div>
           </div>
@@ -266,9 +269,7 @@ const ProjectDetail = () => {
       <section className="px-6 pb-6 w-4/6 mx-auto">
         <div className="bg-white shadow rounded p-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">
-              Danh Sách Nhiệm Vụ
-            </h3>
+            <h3 className="text-lg font-semibold">Danh Sách Nhiệm Vụ</h3>
             <div className="flex gap-2">
               <select className="border px-2 py-1 rounded">
                 <option>Sắp xếp theo</option>
@@ -329,7 +330,7 @@ const ProjectDetail = () => {
                             Sửa
                           </button>
                           <button
-                            onClick={() => handleDeleteTask(t.id)}
+                            onClick={() => handleDeleteClick(t)}
                             className="bg-red-500 text-white px-3 py-1 rounded"
                           >
                             Xóa
@@ -351,7 +352,15 @@ const ProjectDetail = () => {
         existingTasks={tasks.map((t) => t.name)}
         editTask={selectedTask}
       />
-
+      <ConfirmDeleteTask
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xoá nhiệm vụ"
+        message={`Bạn có chắc chắn muốn xoá nhiệm vụ "${
+          taskToDelete?.name || ""
+        }" không?`}
+      />
       <footer className="bg-gray-800 text-white text-center p-4">
         © 2025 Quản Lý Dự Án Nhóm. All rights reserved.
       </footer>
